@@ -392,11 +392,21 @@ function Dashboard() {
 
                   <div className="flex flex-wrap gap-2 mt-4">
                     <button
-                      onClick={() => {
-                        setSelectedPdf(
-                          `${API_URL}/${doc.filePath.replace(/\\/g, "/")}`
-                        );
-                        setSelectedDocId(doc._id);
+  onClick={() => {
+    const cleanPath = doc.filePath
+      .replace(/\\/g, "/")
+      .replace(/^\/+/, "");
+
+    setSelectedPdf(
+      `${API_URL}/${cleanPath}`
+    );
+
+    console.log(
+      "PDF URL:",
+      `${API_URL}/${cleanPath}`
+    );
+
+    setSelectedDocId(doc._id);
                         setSignatureSaved(false);
                         setSignatureImage("");
 
