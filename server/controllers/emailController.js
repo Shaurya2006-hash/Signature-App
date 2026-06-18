@@ -61,13 +61,13 @@ const sendSignatureRequest =
         message:
           "Email sent successfully",
       });
-    } catch (error) {
-      res.status(500).json({
-        message: error.message,
-      });
-    }
-  };
-
+    }  catch (error) {
+  console.error("EMAIL ERROR:", error.message); // ADD THIS LINE
+  res.status(500).json({
+    message: error.message,
+  });
+}
+  }
 module.exports = {
   sendSignatureRequest,
 };

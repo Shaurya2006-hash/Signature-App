@@ -43,11 +43,9 @@ const generateSignedPdf = async (
     =========================
     */
 
-    const cleanPath =
-      document.filePath.replace(
-        /^\/+/,
-        ""
-      );
+    const cleanPath = document.filePath
+      .replace(/\\/g, "/")  // FIX: backslashes → forward slashes (Linux fix)
+      .replace(/^\/+/, ""); // strip leading slashes
 
     const pdfPath =
       path.join(
