@@ -229,7 +229,7 @@ function Dashboard() {
       formData.append("pdf", selectedFile);
       const token = localStorage.getItem("token");
 
-      await fetch(`${API_URL.replace(/\/+$/, "")}/api/docs/upload`, {
+    await fetch(`${API_URL.replace(/\/+$/, "")}/api/documents/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

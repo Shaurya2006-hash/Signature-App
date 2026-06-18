@@ -21,7 +21,7 @@ function UploadDocument() {
       formData.append("pdf", pdf);
       const token = localStorage.getItem("token");
 
-      const uploadResponse = await API.post("/api/docs/upload", formData, {
+      const uploadResponse = await API.post("/api/documents/upload", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
