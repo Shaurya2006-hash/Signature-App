@@ -1,0 +1,68 @@
+const mongoose = require("mongoose");
+
+const signatureRequestSchema =
+  new mongoose.Schema(
+    {
+      documentId: {
+        type:
+          mongoose.Schema.Types.ObjectId,
+        ref: "Document",
+        required: true,
+      },
+
+      email: {
+        type: String,
+        required: true,
+      },
+
+      token: {
+        type: String,
+        required: true,
+      },
+
+      status: {
+        type: String,
+        default: "pending",
+      },
+
+      signerName: {
+        type: String,
+        default: "",
+      },
+
+      signatureType: {
+        type: String,
+        default: "",
+      },
+
+      signatureImage: {
+        type: String,
+        default: "",
+      },
+
+      signedAt: {
+        type: Date,
+      },
+      signedPdfUrl: {
+  type: String,
+  default: "",
+},
+signedPdfUrl: {
+  type: String,
+  default: "",
+},
+      reason: {
+        type: String,
+        default: "",
+      },
+    },
+    {
+      timestamps: true,
+    }
+  );
+
+module.exports =
+  mongoose.model(
+    "SignatureRequest",
+    signatureRequestSchema
+  );
