@@ -28,6 +28,7 @@ function PublicSignPage() {
   const [request, setRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const [signatureMode, setSignatureMode] = useState<"type" | "draw">("type");
   const [signerName, setSignerName] = useState("");
@@ -66,31 +67,66 @@ function PublicSignPage() {
   };
 
   const handleSign = async () => {
+    // ── Client-side validation (this is what was causing silent "Failed to sign" errors) ──
+    if (signatureMode === "type" && !signerName.trim()) {
+      alert("Please enter your name before signing");
+      return;
+    }
+
+    let finalSignatureImage = signatureImage;
+
+    if (signatureMode === "draw") {
+      // Auto-capture if the user drew but forgot to click "Capture Signature"
+      if (!finalSignatureImage && sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+        finalSignatureImage = sigCanvasRef.current.toDataURL();
+        setSignatureImage(finalSignatureImage);
+      }
+      if (!finalSignatureImage) {
+        alert("Please draw your signature before signing");
+        return;
+      }
+    }
+
+    setSubmitting(true);
     try {
       await API.put(`/api/signature-request/sign/${token}`, {
         signerName,
         fontStyle,
         signatureType: signatureMode,
-        signatureImage: signatureMode === "draw" ? signatureImage : "",
+        signatureImage: signatureMode === "draw" ? finalSignatureImage : "",
       });
 
       alert("Document Signed Successfully");
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to sign document");
+      const message =
+        error?.response?.data?.message || "Failed to sign document";
+      alert(message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleReject = async () => {
+    if (!reason.trim()) {
+      alert("Please enter a reason for rejecting");
+      return;
+    }
+
+    setSubmitting(true);
     try {
       await API.put(`/api/signature-request/reject/${token}`, { reason });
 
       alert("Document Rejected");
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to reject document");
+      const message =
+        error?.response?.data?.message || "Failed to reject document";
+      alert(message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -262,15 +298,17 @@ function PublicSignPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleSign}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
+                  disabled={submitting}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Accept & Sign
+                  {submitting ? "Submitting..." : "Accept & Sign"}
                 </button>
                 <button
                   onClick={handleReject}
-                  className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700"
+                  disabled={submitting}
+                  className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Reject
+                  {submitting ? "Submitting..." : "Reject"}
                 </button>
               </div>
             </>
