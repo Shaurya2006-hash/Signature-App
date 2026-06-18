@@ -1,18 +1,19 @@
-const AuditLog = require("../models/AuditLog"); // adjust if your model name differs
+const Audit = require("../models/Audit");
 
-const createAuditLog = async (documentId, email, action, ip, reason = "") => {
-  try {
-    await AuditLog.create({
-      documentId,
-      email,
-      action,
-      ip,
-      reason,
-      timestamp: new Date(),
-    });
-  } catch (err) {
-    console.error("Audit log error:", err.message);
-  }
+const createAuditLog = async (
+  fileId,
+  email,
+  action,
+  ipAddress,
+  reason = ""
+) => {
+  await Audit.create({
+    fileId,
+    email,
+    action,
+    ipAddress,
+    reason,
+  });
 };
 
 module.exports = createAuditLog;
