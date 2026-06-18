@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
 import API, { API_URL } from "../config/api";
 import SignatureCanvas from "react-signature-canvas";
 import SignaturePlaceholder from "../components/SignaturePlaceholder";
