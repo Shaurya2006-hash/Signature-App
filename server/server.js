@@ -18,6 +18,12 @@ connectDB();
 
 const app = express();
 
+/*
+=========================
+MIDDLEWARE
+=========================
+*/
+
 app.use(
   cors({
     origin: "*",
@@ -51,16 +57,41 @@ API ROUTES
 app.use("/api/pdf", pdfRoutes);
 app.use("/api/auth", authRoutes);
 
-// ✅ Changed from /api/docs
+// ✅ Changed from /api/docs to /api/documents
 app.use("/api/documents", docRoutes);
 
 app.use("/api/signatures", signatureRoutes);
 app.use("/api/signature-request", signatureRequestRoutes);
 app.use("/api/audit", auditRoutes);
 
+/*
+=========================
+TEST ROUTE
+=========================
+*/
+
+app.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Test route works",
+  });
+});
+
+/*
+=========================
+ROOT ROUTE
+=========================
+*/
+
 app.get("/", (req, res) => {
   res.send("API Running");
 });
+
+/*
+=========================
+SERVER
+=========================
+*/
 
 const PORT = process.env.PORT || 5000;
 
