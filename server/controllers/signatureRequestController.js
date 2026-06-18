@@ -134,7 +134,8 @@ const markSigned = async (
       new Date();
 
     await request.save();
-
+    jsconsole.log("documentId:", request.documentId);
+console.log("request:", request);
     const pdfResult =
       await generateSignedPdfForRequest(
         request.documentId,
