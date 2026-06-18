@@ -1,6 +1,8 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const path = require("path");
 
 const connectDB = require("./config/db");
@@ -11,7 +13,6 @@ const signatureRoutes = require("./routes/signatureRoutes");
 const signatureRequestRoutes = require("./routes/signatureRequestRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
-dotenv.config();
 
 connectDB();
 
@@ -33,42 +34,33 @@ STATIC FOLDERS
 
 app.use(
   "/uploads",
-  express.static(
-    path.join(__dirname, "uploads")
-  )
+  express.static(path.join(__dirname, "uploads"))
 );
 
 app.use(
   "/signed",
-  express.static(
-    path.join(__dirname, "signed")
-  )
+  express.static(path.join(__dirname, "signed"))
 );
-app.use("/api/pdf", pdfRoutes);
+
 /*
 =========================
 API ROUTES
 =========================
 */
 
+app.use("/api/pdf", pdfRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/docs", docRoutes);
 app.use("/api/signatures", signatureRoutes);
-app.use(
-  "/api/signature-request",
-  signatureRequestRoutes
-);
+app.use("/api/signature-request", signatureRequestRoutes);
 app.use("/api/audit", auditRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Running");
 });
 
-const PORT =
-  process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(
-    `Server running on port ${PORT}`
-  );
+  console.log(`Server running on port ${PORT}`);
 });
