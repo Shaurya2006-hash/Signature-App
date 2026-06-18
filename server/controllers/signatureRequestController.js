@@ -1,46 +1,28 @@
 const {
   generateSignedPdfForRequest,
-} = require(
-  "../services/pdfService"
-);
-const SignatureRequest =
-  require("../models/SignatureRequest");
+} = require("../services/pdfService");
 
-const crypto =
-  require("crypto");
+const SignatureRequest = require("../models/SignatureRequest");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
+const createAuditLog = require("../middleware/auditMiddleware");
 
-const sendEmail =
-  require("../utils/sendEmail");
-
-const createAuditLog =
-  require(
-    "../middleware/auditMiddleware"
-  );
-
-const createRequest = async (
-  req,
-  res
-) => {
+const createRequest = async (req, res) => {
   try {
-    const {
+    console.log("===== CREATE REQUEST =====");
+    console.log("Body:", req.body);
+
+    const { documentId, email } = req.body;
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    const request = await SignatureRequest.create({
       documentId,
       email,
-    } = req.body;
+      token,
+    });
 
-    const token =
-      crypto
-        .randomBytes(32)
-        .toString("hex");
-
-    const request =
-      await SignatureRequest.create({
-        documentId,
-        email,
-        token,
-      });
-
-    const signLink =
-      `http://localhost:5173/sign/${token}`;
+    const signLink = `http://localhost:5173/sign/${token}`;
 
     await sendEmail(
       email,
@@ -49,15 +31,13 @@ const createRequest = async (
     );
 
     res.status(201).json({
-      message:
-        "Request created successfully",
+      message: "Request created successfully",
       token,
       request,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    console.error("CREATE REQUEST ERROR:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -73,172 +53,114 @@ const verifyToken = async (req, res) => {
     console.log("Request Found:", request);
 
     if (!request) {
-      return res.status(404).json({
-        message: "Invalid link",
-      });
+      return res.status(404).json({ message: "Invalid link" });
     }
 
-    res.status(200).json({
-      valid: true,
-      request,
-    });
+    res.status(200).json({ valid: true, request });
   } catch (error) {
-    console.log("VERIFY ERROR:");
-    console.log(error);
-
-    res.status(500).json({
-      message: error.message,
-    });
+    console.log("VERIFY ERROR:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-const markSigned = async (
-  req,
-  res
-) => {
+const markSigned = async (req, res) => {
   try {
-    const { token } =
-      req.params;
+    const { token } = req.params;
+    const { signerName, signatureType, signatureImage } = req.body;
 
-    const {
-      signerName,
-      signatureType,
-      signatureImage,
-    } = req.body;
-
-    const request =
-      await SignatureRequest.findOne({
-        token,
-      });
+    const request = await SignatureRequest.findOne({ token });
 
     if (!request) {
-      return res.status(404).json({
-        message:
-          "Invalid token",
-      });
+      return res.status(404).json({ message: "Invalid token" });
     }
 
-    request.signerName =
-      signerName || "";
-
-    request.signatureType =
-      signatureType || "";
-
-    request.signatureImage =
-      signatureImage || "";
-
-    request.status =
-      "signed";
-
-    request.signedAt =
-      new Date();
+    request.signerName = signerName || "";
+    request.signatureType = signatureType || "";
+    request.signatureImage = signatureImage || "";
+    request.status = "signed";
+    request.signedAt = new Date();
 
     await request.save();
-    jsconsole.log("documentId:", request.documentId);
-console.log("request:", request);
-    const pdfResult =
-      await generateSignedPdfForRequest(
-        request.documentId,
-        request
-      );
 
-    request.signedPdfUrl =
-      pdfResult.downloadUrl;
+    console.log("documentId:", request.documentId);
+    console.log("request:", request);
 
+    const pdfResult = await generateSignedPdfForRequest(
+      request.documentId,
+      request
+    );
+
+    request.signedPdfUrl = pdfResult.downloadUrl;
     await request.save();
-      await sendEmail(
-  request.email,
-  "Document Signed Successfully",
-  `Your document has been signed.
 
-Download PDF:
+    await sendEmail(
+      request.email,
+      "Document Signed Successfully",
+      `Your document has been signed.\n\nDownload PDF:\n\n${request.signedPdfUrl}`
+    );
 
-${request.signedPdfUrl}`
-);
-   await createAuditLog(
-  request.documentId,
-  request.email,
-  "signed",
-  req.ip
-);
+    await createAuditLog(
+      request.documentId,
+      request.email,
+      "signed",
+      req.ip
+    );
 
     res.status(200).json({
       success: true,
-      message:
-        "Document signed successfully",
-      signedPdfUrl:
-        request.signedPdfUrl,
+      message: "Document signed successfully",
+      signedPdfUrl: request.signedPdfUrl,
       request,
     });
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message:
-        error.message,
-    });
+    console.error("MARK SIGNED ERROR:", error);
+    res.status(500).json({ message: error.message });
   }
 };
-const rejectRequest = async (
-  req,
-  res
-) => {
+
+const rejectRequest = async (req, res) => {
   try {
-    const { token } =
-      req.params;
+    const { token } = req.params;
+    const { reason } = req.body;
 
-    const { reason } =
-      req.body;
-
-    const request =
-      await SignatureRequest.findOne({
-        token,
-      });
+    const request = await SignatureRequest.findOne({ token });
 
     if (!request) {
-      return res.status(404).json({
-        message:
-          "Invalid token",
-      });
+      return res.status(404).json({ message: "Invalid token" });
     }
 
-    request.status =
-      "rejected";
-
-    request.reason =
-      reason || "";
-
+    request.status = "rejected";
+    request.reason = reason || "";
     await request.save();
-    
 
     await createAuditLog(
-  request.documentId,
-  request.email,
-  "rejected",
-  req.ip,
-  reason
-);
+      request.documentId,
+      request.email,
+      "rejected",
+      req.ip,
+      reason
+    );
 
     res.status(200).json({
-      message:
-        "Request rejected successfully",
+      message: "Request rejected successfully",
       request,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    console.error("REJECT REQUEST ERROR:", error);
+    res.status(500).json({ message: error.message });
   }
 };
-const getAllRequests =
-async (req,res) => {
 
-const requests =
-await SignatureRequest.find();
-
-res.json(requests);
-
+const getAllRequests = async (req, res) => {
+  try {
+    const requests = await SignatureRequest.find();
+    res.json(requests);
+  } catch (error) {
+    console.error("GET ALL REQUESTS ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
 };
+
 const selfSignDocument = async (req, res) => {
   try {
     const { documentId } = req.params;
@@ -262,14 +184,10 @@ const selfSignDocument = async (req, res) => {
       await request.save();
     }
 
-    res.json({
-      success: true,
-      request,
-    });
+    res.json({ success: true, request });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    console.error("SELF SIGN ERROR:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
