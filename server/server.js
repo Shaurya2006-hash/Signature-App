@@ -25,21 +25,50 @@ app.use(
 
 app.use(express.json());
 
-// Serve uploaded PDFs
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+/*
+=========================
+STATIC FOLDERS
+=========================
+*/
+
+app.use(
+  "/uploads",
+  express.static(
+    path.join(__dirname, "uploads")
+  )
+);
+
+app.use(
+  "/signed",
+  express.static(
+    path.join(__dirname, "signed")
+  )
+);
+
+/*
+=========================
+API ROUTES
+=========================
+*/
 
 app.use("/api/auth", authRoutes);
 app.use("/api/docs", docRoutes);
 app.use("/api/signatures", signatureRoutes);
-app.use("/api/signature-request", signatureRequestRoutes);
+app.use(
+  "/api/signature-request",
+  signatureRequestRoutes
+);
 app.use("/api/audit", auditRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Running");
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT =
+  process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });
