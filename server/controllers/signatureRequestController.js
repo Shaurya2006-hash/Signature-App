@@ -1,4 +1,4 @@
-controller · JS
+
 const {
   generateSignedPdfForRequest,
 } = require("../services/pdfService");

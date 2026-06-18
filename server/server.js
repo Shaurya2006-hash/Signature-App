@@ -50,7 +50,10 @@ API ROUTES
 
 app.use("/api/pdf", pdfRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/docs", docRoutes);
+
+// ✅ Changed from /api/docs
+app.use("/api/documents", docRoutes);
+
 app.use("/api/signatures", signatureRoutes);
 app.use("/api/signature-request", signatureRequestRoutes);
 app.use("/api/audit", auditRoutes);
