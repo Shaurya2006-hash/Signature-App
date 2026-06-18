@@ -1,5 +1,7 @@
-import PdfViewer
-from "./PdfViewer";
+import PdfViewer from "./PdfViewer";
+
+const API_URL =
+  import.meta.env.VITE_API_URL;
 
 function DocumentList({
   documents,
@@ -14,11 +16,11 @@ function DocumentList({
             </h3>
 
             <PdfViewer
-  fileUrl={`http://localhost:5000/${doc.filePath.replace(
-    /\\/g,
-    "/"
-  )}`}
-/>
+              fileUrl={`${API_URL}/${doc.filePath.replace(
+                /\\/g,
+                "/"
+              )}`}
+            />
           </div>
         )
       )}

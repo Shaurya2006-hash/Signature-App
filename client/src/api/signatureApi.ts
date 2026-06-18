@@ -1,12 +1,11 @@
-import axios from "axios";
-
-const API_URL =
-  "http://localhost:5000/api/signatures";
+import API from "../config/api";
 
 export const getSignatures =
   async () => {
     const response =
-      await axios.get(API_URL);
+      await API.get(
+        "/api/signatures"
+      );
 
     return response.data;
   };
@@ -14,8 +13,8 @@ export const getSignatures =
 export const saveSignature =
   async (data: any) => {
     const response =
-      await axios.post(
-        API_URL,
+      await API.post(
+        "/api/signatures",
         data
       );
 
@@ -27,8 +26,8 @@ export const generatePdf =
     documentId: string
   ) => {
     const response =
-      await axios.post(
-        `http://localhost:5000/api/pdf/generate/${documentId}`
+      await API.post(
+        `/api/pdf/generate/${documentId}`
       );
 
     return response.data;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import API, { API_URL } from "../config/api";
 import SignatureCanvas from "react-signature-canvas";
 import SignaturePlaceholder from "../components/SignaturePlaceholder";
 import PdfViewer from "../components/PdfViewer";
@@ -114,9 +115,7 @@ function Dashboard() {
         }
 
         // Step 2 — fetch all signature requests
-        const requestResponse = await axios.get(
-          "http://localhost:5000/api/signature-request"
-        );
+        const requestResponse = await API.get("/api/signature-request");
         setSignatureRequests(requestResponse.data);
 
         const docsData = await getDocuments(token);
@@ -146,9 +145,7 @@ function Dashboard() {
     try {
       setAuditDocId(docId);
       setAuditLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/api/audit/${docId}`
-      );
+      const response = await API.get(`/api/audit/${docId}`);
       setAuditLogs(response.data);
     } catch (err) {
       console.error("Failed to fetch audit logs", err);
@@ -192,9 +189,7 @@ function Dashboard() {
 
       await saveSignature(payload);
 
-      await axios.put(
-        `http://localhost:5000/api/signature-request/self-sign/${selectedDocId}`
-      );
+      await API.put(`/api/signature-request/self-sign/${selectedDocId}`);
 
       const updatedSignatures = await getSignatures();
       setSignatures(updatedSignatures);
@@ -229,7 +224,7 @@ function Dashboard() {
       formData.append("pdf", selectedFile);
       const token = localStorage.getItem("token");
 
-      await fetch("http://localhost:5000/api/docs/upload", {
+      await fetch(`${API_URL}/api/docs/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -267,10 +262,9 @@ function Dashboard() {
     }
 
     try {
-      await fetch("http://localhost:5000/api/signature-request/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: recipientEmail, documentId: selectedDocId }),
+      await API.post("/api/signature-request/create", {
+        email: recipientEmail,
+        documentId: selectedDocId,
       });
 
       alert("Signature Request Sent");
@@ -400,7 +394,7 @@ function Dashboard() {
                     <button
                       onClick={() => {
                         setSelectedPdf(
-                          `http://localhost:5000/${doc.filePath.replace(/\\/g, "/")}`
+                          `${API_URL}/${doc.filePath.replace(/\\/g, "/")}`
                         );
                         setSelectedDocId(doc._id);
                         setSignatureSaved(false);

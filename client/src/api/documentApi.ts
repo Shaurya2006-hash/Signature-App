@@ -1,17 +1,17 @@
-import axios from "axios";
-
-const API_URL =
-  "http://localhost:5000/api/docs";
+import API from "../config/api";
 
 export const getDocuments =
   async (token: string) => {
     const response =
-      await axios.get(API_URL, {
-        headers: {
-          Authorization:
-            `Bearer ${token}`,
-        },
-      });
+      await API.get(
+        "/api/docs",
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
 
     return response.data;
   };

@@ -1,15 +1,11 @@
-import axios from "axios";
-
-const API =
-  "http://localhost:5000/api/signature-request";
-
+import API from "../config/api";
 export const verifyToken =
   async (
     token: string
   ) => {
     const response =
-      await axios.get(
-        `${API}/${token}`
+      await API.get(
+        `/api/signature-request/${token}`
       );
 
     return response.data;

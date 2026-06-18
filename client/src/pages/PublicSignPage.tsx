@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import API from "../config/api";
 import SignatureCanvas from "react-signature-canvas";
 
 const FONT_OPTIONS = [
@@ -38,9 +38,7 @@ function PublicSignPage() {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:5000/api/signature-request/${token}`
-        );
+        const response = await API.get(`/api/signature-request/${token}`);
         setRequest(response.data.request);
       } catch (error) {
         console.error(error);
@@ -69,15 +67,12 @@ function PublicSignPage() {
 
   const handleSign = async () => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/signature-request/sign/${token}`,
-        {
-          signerName,
-          fontStyle,
-          signatureType: signatureMode,
-          signatureImage: signatureMode === "draw" ? signatureImage : "",
-        }
-      );
+      await API.put(`/api/signature-request/sign/${token}`, {
+        signerName,
+        fontStyle,
+        signatureType: signatureMode,
+        signatureImage: signatureMode === "draw" ? signatureImage : "",
+      });
 
       alert("Document Signed Successfully");
       window.location.reload();
@@ -89,10 +84,7 @@ function PublicSignPage() {
 
   const handleReject = async () => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/signature-request/reject/${token}`,
-        { reason }
-      );
+      await API.put(`/api/signature-request/reject/${token}`, { reason });
 
       alert("Document Rejected");
       window.location.reload();
