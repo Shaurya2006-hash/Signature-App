@@ -68,6 +68,11 @@ function getPreviewStyle(font: string): React.CSSProperties {
   return found ? found.style : {};
 }
 
+// ─── Helper: safely join base URL + path (no double slashes) ────────────────
+function buildUrl(base: string, path: string): string {
+  return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
+}
+
 function Dashboard() {
   const [documents, setDocuments] = useState<DocumentType[]>([]);
 
@@ -224,7 +229,7 @@ function Dashboard() {
       formData.append("pdf", selectedFile);
       const token = localStorage.getItem("token");
 
-      await fetch(`${API_URL}/api/docs/upload`, {
+      await fetch(`${API_URL.replace(/\/+$/, "")}/api/docs/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -392,21 +397,19 @@ function Dashboard() {
 
                   <div className="flex flex-wrap gap-2 mt-4">
                     <button
-  onClick={() => {
-    const cleanPath = doc.filePath
-      .replace(/\\/g, "/")
-      .replace(/^\/+/, "");
+                      onClick={() => {
+                        // ── FIX: normalize filePath and strip leading slash,
+                        //         then join with base URL using buildUrl helper
+                        //         so we never get double slashes ──────────────
+                        const cleanPath = doc.filePath
+                          .replace(/\\/g, "/")   // Windows backslashes → forward slash
+                          .replace(/^\/+/, "");  // strip any leading slashes
 
-    setSelectedPdf(
-      `${API_URL}/${cleanPath}`
-    );
+                        const pdfUrl = buildUrl(API_URL, cleanPath);
 
-    console.log(
-      "PDF URL:",
-      `${API_URL}/${cleanPath}`
-    );
-
-    setSelectedDocId(doc._id);
+                        console.log("PDF URL:", pdfUrl);
+                        setSelectedPdf(pdfUrl);
+                        setSelectedDocId(doc._id);
                         setSignatureSaved(false);
                         setSignatureImage("");
 

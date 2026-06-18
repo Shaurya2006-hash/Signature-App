@@ -10,7 +10,7 @@ const docRoutes = require("./routes/documentRoutes");
 const signatureRoutes = require("./routes/signatureRoutes");
 const signatureRequestRoutes = require("./routes/signatureRequestRoutes");
 const auditRoutes = require("./routes/auditRoutes");
-
+const pdfRoutes = require("./routes/pdfRoutes");
 dotenv.config();
 
 connectDB();
@@ -44,7 +44,7 @@ app.use(
     path.join(__dirname, "signed")
   )
 );
-
+app.use("/api/pdf", pdfRoutes);
 /*
 =========================
 API ROUTES
