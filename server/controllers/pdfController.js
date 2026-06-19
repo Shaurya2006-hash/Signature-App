@@ -3,10 +3,6 @@ const axios = require("axios");
 
 const Document = require("../models/Document");
 const Signature = require("../models/Signature");
-const axios = require("axios");
-
-const Document = require("../models/Document");
-const Signature = require("../models/Signature");
 
 const generateSignedPdf = async (req, res) => {
   try {
