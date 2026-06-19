@@ -4,11 +4,7 @@ import SignatureCanvas from "react-signature-canvas";
 import SignaturePlaceholder from "../components/SignaturePlaceholder";
 import PdfViewer from "../components/PdfViewer";
 import { getDocuments } from "../api/documentApi";
-import {
-  getSignatures,
-  saveSignature,
-} from "../api/signatureApi";
-
+import { getSignatures, saveSignature } from "../api/signatureApi";
 interface DocumentType {
   _id: string;
   originalName: string;
@@ -201,11 +197,10 @@ function Dashboard() {
 const handleGeneratePdf = async () => {
   try {
     // =========================
-    // VALIDATION (IMPORTANT FIX)
+    // VALIDATION
     // =========================
-
-    if (!signatureMode) {
-      alert("Please select signature type (type or draw)");
+    if (!selectedDocId) {
+      alert("Select a document first");
       return;
     }
 
@@ -215,25 +210,26 @@ const handleGeneratePdf = async () => {
     }
 
     if (signatureMode === "type" && !signerName) {
-      alert("Please enter your name for typed signature");
+      alert("Please enter name");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login again");
       return;
     }
 
     // =========================
-    // BUILD PAYLOAD
+    // PAYLOAD
     // =========================
     const payload = {
       documentId: selectedDocId,
       x: dragX,
       y: dragY,
-
-      // TYPE SIGNATURE
-      signerName: signatureMode === "type" ? signerName : null,
-      fontStyle: signatureMode === "type" ? fontStyle : null,
-
-      // DRAW SIGNATURE
-      signatureImage: signatureMode === "draw" ? signatureImage : null,
-
+      signerName: signatureMode === "type" ? signerName : "",
+      fontStyle: signatureMode === "type" ? fontStyle : "",
+      signatureImage: signatureMode === "draw" ? signatureImage : "",
       signatureMode,
     };
 
@@ -242,10 +238,13 @@ const handleGeneratePdf = async () => {
     // =========================
     const response = await API.post("/api/pdf/generate", payload, {
       responseType: "blob",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     // =========================
-    // OPEN GENERATED PDF
+    // OPEN PDF
     // =========================
     const blob = new Blob([response.data], {
       type: "application/pdf",
