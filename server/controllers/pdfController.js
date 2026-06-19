@@ -4,14 +4,14 @@ const { PDFDocument } = require("pdf-lib");
 
 const Document = require("../models/Document");
 const Signature = require("../models/Signature");
-console.log("================================");
-console.log("PDF ROUTE HIT");
-console.log("Document ID:", req.params.documentId);
-console.log("================================");
 const generateSignedPdf = async (
   req,
   res
 ) => {
+   console.log("================================");
+    console.log("PDF ROUTE HIT");
+    console.log("Document ID:", req.params.documentId);
+    console.log("================================");
   try {
     const { documentId } =
       req.params;
@@ -20,7 +20,7 @@ const generateSignedPdf = async (
       await Document.findById(
         documentId
       );
-      console.log("Document:", document);
+      console.log("Document Found:", document);
 
     if (!document) {
       return res.status(404).json({
