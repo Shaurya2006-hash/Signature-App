@@ -12,27 +12,26 @@ const {
   rejectDocument,
 } = require("../controllers/signatureRequestController");
 
-// =================================
-// AUTHENTICATED ROUTES
-// =================================
+// TEST ROUTE
+router.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Signature routes working",
+  });
+});
 
+// AUTH ROUTES
 router.post("/create", protect, createSignatureRequest);
 
 router.get("/", protect, getSignatureRequests);
 
 router.put("/self-sign/:id", protect, updateSelfSignStatus);
 
-// =================================
 // PUBLIC EMAIL ROUTES
-// =================================
+router.get("/token/:token", getRequestByToken);
 
-// Open email link
-router.get("/:token", getRequestByToken);
-
-// Sign document
 router.put("/sign/:token", signDocument);
 
-// Reject document
 router.put("/reject/:token", rejectDocument);
 
 module.exports = router;
