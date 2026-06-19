@@ -1,21 +1,12 @@
 const express = require("express");
 
-const upload = require(
-  "../middleware/uploadMiddleware"
-);
-
+const upload = require("../middleware/uploadMiddleware");
 const {
   uploadDocument,
   getDocuments,
-} = require(
-  "../controllers/documentController"
-);
+} = require("../controllers/documentController");
 
-const {
-  protect,
-} = require(
-  "../middleware/authMiddleware"
-);
+const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -28,10 +19,6 @@ router.post(
 );
 
 // Get all uploaded documents
-router.get(
-  "/",
-  protect,
-  getDocuments
-);
+router.get("/", protect, getDocuments);
 
 module.exports = router;
