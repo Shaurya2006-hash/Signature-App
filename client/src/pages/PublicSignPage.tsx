@@ -36,26 +36,30 @@ function PublicSignPage() {
   const [signatureImage, setSignatureImage] = useState("");
   const sigCanvasRef = useRef<SignatureCanvas>(null);
 
-  useEffect(() => {
+ useEffect(() => {
   const verifyToken = async () => {
     try {
+      console.log("Token:", token);
+
       const response = await API.get(
-        `/api/signature-request/token/${token}`
+        `/api/signature-request/${token}`
       );
 
       console.log("Request Data:", response.data);
 
       setRequest(response.data);
     } catch (error) {
-      console.error(error);
+      console.error("Verify Token Error:", error);
+      setRequest(null);
     } finally {
       setLoading(false);
     }
   };
 
-  verifyToken();
+  if (token) {
+    verifyToken();
+  }
 }, [token]);
-
   const handleCaptureSignature = () => {
     if (sigCanvasRef.current?.isEmpty()) {
       alert("Please draw signature first");
