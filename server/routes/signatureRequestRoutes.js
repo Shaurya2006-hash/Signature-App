@@ -12,18 +12,27 @@ const {
   rejectDocument,
 } = require("../controllers/signatureRequestController");
 
-// Dashboard routes
+// =================================
+// AUTHENTICATED ROUTES
+// =================================
+
 router.post("/create", protect, createSignatureRequest);
 
 router.get("/", protect, getSignatureRequests);
 
 router.put("/self-sign/:id", protect, updateSelfSignStatus);
 
-// Public routes from email
-router.get("/token/:token", getRequestByToken);
+// =================================
+// PUBLIC EMAIL ROUTES
+// =================================
 
-router.post("/sign/:token", signDocument);
+// Open email link
+router.get("/:token", getRequestByToken);
 
-router.post("/reject/:token", rejectDocument);
+// Sign document
+router.put("/sign/:token", signDocument);
+
+// Reject document
+router.put("/reject/:token", rejectDocument);
 
 module.exports = router;

@@ -106,9 +106,11 @@ const updateSelfSignStatus = async (
 
 const getRequestByToken = async (req, res) => {
   try {
-    const request = await SignatureRequest.findOne({
-      token: req.params.token,
-    }).populate("documentId");
+    const request = await SignatureRequest
+      .findOne({
+        token: req.params.token,
+      })
+      .populate("documentId");
 
     if (!request) {
       return res.status(404).json({
@@ -116,11 +118,9 @@ const getRequestByToken = async (req, res) => {
       });
     }
 
-    return res.json({
-      request,
-    });
+    res.json(request);
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: error.message,
     });
   }

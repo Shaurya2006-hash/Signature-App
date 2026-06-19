@@ -39,8 +39,11 @@ function PublicSignPage() {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const response = await API.get(`/api/signature-request/${token}`);
-        setRequest(response.data.request);
+       const response = await API.get(
+  `/api/signature-request/${token}`
+);
+
+setRequest(response.data);
       } catch (error) {
         console.error(error);
       } finally {
