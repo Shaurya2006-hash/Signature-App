@@ -1,27 +1,13 @@
 const multer = require("multer");
+const cloudinary = require("../config/cloudinary");
+const cloudinaryStorage = require("multer-storage-cloudinary");
 
-const {
-  CloudinaryStorage,
-} = require(
-  "multer-storage-cloudinary"
-);
-
-const cloudinary = require(
-  "../config/cloudinary"
-);
-
-const storage =
-  new CloudinaryStorage({
-    cloudinary,
-
-    params: {
-      folder: "pdfs",
-
-      resource_type: "raw",
-
-      format: async () => "pdf",
-    },
-  });
+const storage = cloudinaryStorage({
+  cloudinary: cloudinary,
+  folder: "pdfs",
+  allowedFormats: ["pdf"],
+  resource_type: "raw",
+});
 
 const upload = multer({
   storage,
