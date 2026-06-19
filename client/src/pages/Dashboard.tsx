@@ -199,7 +199,7 @@ function Dashboard() {
     }
   };
 
- const handleGeneratePdf = async () => {
+const handleGeneratePdf = async () => {
   try {
     const response = await generatePdf(selectedDocId);
 
@@ -215,6 +215,33 @@ function Dashboard() {
     alert("Failed to generate PDF");
   }
 };
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Select a PDF first");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("pdf", selectedFile);
+      const token = localStorage.getItem("token");
+
+    await fetch(`${API_URL.replace(/\/+$/, "")}/api/documents/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      alert("Document Uploaded Successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      alert("Upload Failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleClearCanvas = () => {
     sigCanvasRef.current?.clear();
