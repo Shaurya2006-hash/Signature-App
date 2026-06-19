@@ -154,9 +154,10 @@ function PublicSignPage() {
           <p className="mb-3">
             <strong>Status:</strong> {request.status}
           </p>
-          <p className="mb-3">
-            <strong>Document ID:</strong> {request.documentId}
-          </p>
+         <p className="mb-3">
+  <strong>Document:</strong>{" "}
+  {request.documentId?.originalName}
+</p>
 
           {request.reason && (
             <p className="mb-4 text-red-600">
