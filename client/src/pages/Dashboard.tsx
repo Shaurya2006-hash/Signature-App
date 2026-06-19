@@ -201,15 +201,19 @@ function Dashboard() {
 
 const handleGeneratePdf = async () => {
   try {
-    const response = await generatePdf(selectedDocId);
+    const blob = await generatePdf(selectedDocId);
 
-    const blob = new Blob([response.data], {
-      type: "application/pdf",
-    });
+    if (!blob) {
+      alert("Failed to generate PDF");
+      return;
+    }
 
-    const url = window.URL.createObjectURL(blob);
+    // Create URL from blob
+    const fileURL = window.URL.createObjectURL(blob);
 
-    window.open(url, "_blank");
+    // Open PDF
+    window.open(fileURL, "_blank", "noopener,noreferrer");
+
   } catch (error) {
     console.error(error);
     alert("Failed to generate PDF");

@@ -4,39 +4,38 @@ const axios = require("axios");
 const Document = require("../models/Document");
 const Signature = require("../models/Signature");
 
+const { PDFDocument, rgb } = require("pdf-lib");
+const axios = require("axios");
+
+const Document = require("../models/Document");
+const Signature = require("../models/Signature");
+
 const generateSignedPdf = async (req, res) => {
   try {
     const { documentId } = req.params;
 
-    // 1. Get document
     const document = await Document.findById(documentId);
 
     if (!document) {
-      return res.status(404).json({
-        message: "Document not found",
-      });
+      return res.status(404).json({ message: "Document not found" });
     }
 
-    // 2. Get signature from DB
     const signature = await Signature.findOne({ fileId: documentId });
 
     if (!signature) {
-      return res.status(400).json({
-        message: "No signature found for this document",
-      });
+      return res.status(400).json({ message: "No signature found" });
     }
 
-    // 3. Load original PDF from Cloudinary URL
+    // 1. Fetch original PDF
     const pdfBytes = await axios.get(document.filePath, {
       responseType: "arraybuffer",
     });
 
     const pdfDoc = await PDFDocument.load(pdfBytes.data);
 
-    const pages = pdfDoc.getPages();
-    const page = pages[0];
+    const page = pdfDoc.getPages()[0];
 
-    // 4. APPLY SIGNATURE (TEXT VERSION)
+    // 2. Apply signature (TEXT VERSION)
     page.drawText(signature.signerName || "SIGNED", {
       x: signature.x,
       y: signature.y,
@@ -44,26 +43,17 @@ const generateSignedPdf = async (req, res) => {
       color: rgb(0, 0, 0),
     });
 
-    // 5. OPTIONAL: also show font style (basic workaround)
-    // pdf-lib does NOT fully support custom fonts easily
-    // so we keep simple text rendering
+    // 3. Generate final PDF
+    const finalPdfBytes = await pdfDoc.save();
 
-    // 6. Save modified PDF
-    const modifiedPdfBytes = await pdfDoc.save();
-
-    // 7. Return PDF as file (NOT just URL)
+    // 4. RETURN PDF AS FILE (NO CLOUDINARY)
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=signed-${document.originalName}`
-    );
+    res.setHeader("Content-Disposition", "inline; filename=signed.pdf");
 
-    return res.send(Buffer.from(modifiedPdfBytes));
+    return res.send(Buffer.from(finalPdfBytes));
   } catch (error) {
-    console.error("PDF generation error:", error);
-    return res.status(500).json({
-      message: error.message,
-    });
+    console.error(error);
+    return res.status(500).json({ message: error.message });
   }
 };
 

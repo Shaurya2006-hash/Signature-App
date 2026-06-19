@@ -7,6 +7,9 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 
+// ─────────────────────────────
+// ROUTES
+// ─────────────────────────────
 const authRoutes = require("./routes/authRoutes");
 const docRoutes = require("./routes/documentRoutes");
 const signatureRoutes = require("./routes/signatureRoutes");
@@ -14,27 +17,39 @@ const signatureRequestRoutes = require("./routes/signatureRequestRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const pdfRoutes = require("./routes/pdfRoutes");
 
+// ─────────────────────────────
+// DB CONNECT
+// ─────────────────────────────
 connectDB();
 
 const app = express();
 
 /*
 =========================
-MIDDLEWARE
+MIDDLEWARE (IMPORTANT ORDER)
 =========================
 */
 
+// ✅ JSON BODY PARSER (MUST BE FIRST)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ CORS CONFIG (FIXED FOR FRONTEND + RENDER)
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://signature-app-yv04.onrender.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
 
-app.use(express.json());
-
 /*
 =========================
-STATIC FOLDERS
+STATIC FILES
 =========================
 */
 
@@ -56,10 +71,7 @@ API ROUTES
 
 app.use("/api/pdf", pdfRoutes);
 app.use("/api/auth", authRoutes);
-
-// ✅ Changed from /api/docs to /api/documents
 app.use("/api/documents", docRoutes);
-
 app.use("/api/signatures", signatureRoutes);
 app.use("/api/signature-request", signatureRequestRoutes);
 app.use("/api/audit", auditRoutes);
@@ -89,7 +101,7 @@ app.get("/", (req, res) => {
 
 /*
 =========================
-SERVER
+SERVER START
 =========================
 */
 

@@ -18,8 +18,12 @@ export const saveSignature = async (data: any) => {
 // ─────────────────────────────
 export const generatePdf = async (documentId: string) => {
   const response = await API.post(
-    `/api/pdf/generate/${documentId}`
+    `/api/pdf/generate/${documentId}`,
+    {},
+    {
+      responseType: "blob", // ⭐ IMPORTANT
+    }
   );
 
-  return response.data; // ✅ backend gives { pdfUrl }
+  return response.data; // this is now PDF blob
 };
