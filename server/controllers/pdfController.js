@@ -3,8 +3,6 @@ const axios = require("axios");
 
 const Document = require("../models/Document");
 const Signature = require("../models/Signature");
-
-const { PDFDocument, rgb } = require("pdf-lib");
 const axios = require("axios");
 
 const Document = require("../models/Document");
