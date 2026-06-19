@@ -401,17 +401,9 @@ function Dashboard() {
                   <div className="flex flex-wrap gap-2 mt-4">
                     <button
                       onClick={() => {
-                        // ── FIX: normalize filePath and strip leading slash,
-                        //         then join with base URL using buildUrl helper
-                        //         so we never get double slashes ──────────────
-                        const cleanPath = doc.filePath
-                          .replace(/\\/g, "/")   // Windows backslashes → forward slash
-                          .replace(/^\/+/, "");  // strip any leading slashes
+                        console.log("PDF URL:", doc.filePath);
 
-                        const pdfUrl = buildUrl(API_URL, cleanPath);
-
-                        console.log("PDF URL:", pdfUrl);
-                        setSelectedPdf(pdfUrl);
+                        setSelectedPdf(doc.filePath);
                         setSelectedDocId(doc._id);
                         setSignatureSaved(false);
                         setSignatureImage("");

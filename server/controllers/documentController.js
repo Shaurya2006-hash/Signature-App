@@ -4,21 +4,28 @@ const uploadDocument = async (req, res) => {
   try {
     const document = await Document.create({
       originalName: req.file.originalname,
-      fileName: req.file.filename,
+
+      // Cloudinary public id
+      fileName: req.file.filename || req.file.public_id,
+
+      // Cloudinary URL
       filePath: req.file.path,
-      fileSize: req.file.size,
+
+      fileSize: req.file.size || 0,
+
       uploadedBy: req.user?._id,
     });
 
     res.status(201).json(document);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
   }
 };
 
-// GET ALL DOCUMENTS OF LOGGED-IN USER
 const getDocuments = async (req, res) => {
   try {
     const documents = await Document.find({
