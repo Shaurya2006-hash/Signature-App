@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
-const { generatePdf } = require("../controllers/pdfController");
 
-router.post("/generate", protect, generatePdf);
+// ✅ FIX: correct function name
+const { generateSignedPdf } = require("../controllers/pdfController");
+
+router.post("/generate", protect, generateSignedPdf);
 
 module.exports = router;

@@ -7,7 +7,6 @@ import { getDocuments } from "../api/documentApi";
 import {
   getSignatures,
   saveSignature,
-  generatePdf,
 } from "../api/signatureApi";
 
 interface DocumentType {
