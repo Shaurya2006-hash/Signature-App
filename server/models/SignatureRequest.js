@@ -47,10 +47,7 @@ const signatureRequestSchema =
   type: String,
   default: "",
 },
-signedPdfUrl: {
-  type: String,
-  default: "",
-},
+
       reason: {
         type: String,
         default: "",

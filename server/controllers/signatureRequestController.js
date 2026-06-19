@@ -1,69 +1,66 @@
-const Signature = require("../models/Signature");
+const SignatureRequest = require("../models/SignatureRequest");
 
-// ===============================
-// SAVE SIGNATURE
-// ===============================
-const saveSignature = async (req, res) => {
+// CREATE REQUEST
+const createSignatureRequest = async (req, res) => {
   try {
-    const {
-      fileId,
-      signer,
-      signerName,
-      fontStyle,
-      signatureImage,
-      x,
-      y,
-      status,
-    } = req.body;
+    const { email, documentId } = req.body;
 
-    if (!fileId) {
-      return res.status(400).json({ message: "fileId is required" });
-    }
-
-    if (!signerName && !signatureImage) {
-      return res.status(400).json({
-        message: "Either typed or drawn signature is required",
-      });
-    }
-
-    const signature = await Signature.create({
-      fileId,
-      signer,
-      signerName: signerName || null,
-      fontStyle: fontStyle || "italic",
-      signatureImage: signatureImage || null,
-      x: Number(x || 100),
-      y: Number(y || 100),
-      status: status || "pending",
+    const request = await SignatureRequest.create({
+      email,
+      documentId,
+      status: "pending",
     });
 
-    return res.status(201).json(signature);
+    res.status(201).json(request);
   } catch (error) {
-    console.error("saveSignature error:", error);
-    return res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-// ===============================
-// GET SIGNATURES
-// ===============================
-const getSignatures = async (req, res) => {
+// GET ALL REQUESTS
+const getSignatureRequests = async (req, res) => {
   try {
-    const { fileId } = req.query;
+    const requests = await SignatureRequest.find();
 
-    const query = fileId ? { fileId } : {};
-
-    const signatures = await Signature.find(query).sort({
-      createdAt: -1,
-    });
-
-    return res.json(signatures);
+    res.json(requests);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// SELF SIGN
+const updateSelfSignStatus = async (req, res) => {
+  try {
+    const request = await SignatureRequest.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "signed",
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!request) {
+      return res.status(404).json({
+        message: "Request not found",
+      });
+    }
+
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
 module.exports = {
-  saveSignature,
-  getSignatures,
+  createSignatureRequest,
+  getSignatureRequests,
+  updateSelfSignStatus,
 };
