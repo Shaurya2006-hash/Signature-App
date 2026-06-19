@@ -201,14 +201,61 @@ function Dashboard() {
 
 const handleGeneratePdf = async () => {
   try {
-    const blob = await generatePdf(selectedDocId);
+    // =========================
+    // VALIDATION (IMPORTANT FIX)
+    // =========================
+
+    if (!signatureMode) {
+      alert("Please select signature type (type or draw)");
+      return;
+    }
+
+    if (signatureMode === "draw" && !signatureImage) {
+      alert("Please capture drawn signature first");
+      return;
+    }
+
+    if (signatureMode === "type" && !signerName) {
+      alert("Please enter your name for typed signature");
+      return;
+    }
+
+    // =========================
+    // BUILD PAYLOAD
+    // =========================
+    const payload = {
+      documentId: selectedDocId,
+      x: dragX,
+      y: dragY,
+
+      // TYPE SIGNATURE
+      signerName: signatureMode === "type" ? signerName : null,
+      fontStyle: signatureMode === "type" ? fontStyle : null,
+
+      // DRAW SIGNATURE
+      signatureImage: signatureMode === "draw" ? signatureImage : null,
+
+      signatureMode,
+    };
+
+    // =========================
+    // API CALL
+    // =========================
+    const response = await API.post("/api/pdf/generate", payload, {
+      responseType: "blob",
+    });
+
+    // =========================
+    // OPEN GENERATED PDF
+    // =========================
+    const blob = new Blob([response.data], {
+      type: "application/pdf",
+    });
 
     const url = window.URL.createObjectURL(blob);
-
     window.open(url, "_blank", "noopener,noreferrer");
-
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     alert("Failed to generate PDF");
   }
 };
