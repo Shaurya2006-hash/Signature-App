@@ -1,54 +1,41 @@
 const Document = require("../models/Document");
+const cloudinary = require("../config/cloudinary");
 
 const uploadDocument = async (req, res) => {
   try {
-   console.log("FILE OBJECT:");
-console.log(req.file);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "pdfs",
+          resource_type: "raw",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(req.file.buffer);
+    });
+
+    console.log(result);
 
     const document = await Document.create({
       originalName: req.file.originalname,
 
-      // Cloudinary public id
-      fileName: req.file.filename || req.file.public_id,
+      fileName: result.public_id,
 
-      // Cloudinary URL
-      filePath: req.file.path,
+      filePath: result.secure_url,
 
-      fileSize: req.file.size || 0,
+      fileSize: result.bytes,
 
-      uploadedBy: req.user?._id,
+      uploadedBy: req.user._id,
     });
 
     res.status(201).json(document);
   } catch (error) {
-    console.log("ERROR:");
     console.log(error);
 
-    if (error.errors) {
-      console.log(error.errors);
-    }
-
     res.status(500).json({
       message: error.message,
     });
   }
-};
-
-const getDocuments = async (req, res) => {
-  try {
-    const documents = await Document.find({
-      uploadedBy: req.user._id,
-    });
-
-    res.status(200).json(documents);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
-};
-
-module.exports = {
-  uploadDocument,
-  getDocuments,
 };
