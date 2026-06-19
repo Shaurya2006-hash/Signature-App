@@ -199,17 +199,26 @@ function Dashboard() {
     }
   };
 
-  const handleGeneratePdf = async () => {
+ const handleGeneratePdf = async () => {
   try {
-    console.log("selectedDocId =", selectedDocId);
+    console.log("Generating PDF for:", selectedDocId);
 
     const result = await generatePdf(selectedDocId);
 
-    alert("Signed PDF Generated");
+    console.log("PDF API RESULT:", result);
 
-    window.open(result.downloadUrl, "_blank");
+    const pdfUrl = result?.pdfUrl;
+
+    // 🚨 SAFE CHECK (prevents about:blank)
+    if (!pdfUrl) {
+      alert("PDF URL not found. Check backend response.");
+      return;
+    }
+
+    // ✅ OPEN PDF
+    window.open(pdfUrl, "_blank", "noopener,noreferrer");
   } catch (error) {
-    console.error(error);
+    console.error("PDF generation error:", error);
     alert("Failed to generate PDF");
   }
 };

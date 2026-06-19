@@ -1,17 +1,10 @@
 const express = require("express");
 
-const router =
-  express.Router();
+const router = express.Router();
 
-const {
-  generateSignedPdf,
-} = require(
-  "../controllers/pdfController"
-);
+const { generateSignedPdf } = require("../controllers/pdfController");
 
-router.post(
-  "/generate/:documentId",
-  generateSignedPdf
-);
+// IMPORTANT: must match frontend POST
+router.post("/generate/:documentId", generateSignedPdf);
 
 module.exports = router;
