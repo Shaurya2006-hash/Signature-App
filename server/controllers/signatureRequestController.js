@@ -35,8 +35,10 @@ const getSignatureRequests = async (req, res) => {
 // SELF SIGN
 const updateSelfSignStatus = async (req, res) => {
   try {
-    const request = await SignatureRequest.findByIdAndUpdate(
-      req.params.id,
+    const request = await SignatureRequest.findOneAndUpdate(
+      {
+        documentId: req.params.id,
+      },
       {
         status: "signed",
       },
@@ -47,7 +49,7 @@ const updateSelfSignStatus = async (req, res) => {
 
     if (!request) {
       return res.status(404).json({
-        message: "Request not found",
+        message: "Signature request not found",
       });
     }
 
