@@ -37,22 +37,24 @@ function PublicSignPage() {
   const sigCanvasRef = useRef<SignatureCanvas>(null);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      try {
-       const response = await API.get(
-  `/api/signature-request/${token}`
-);
+  const verifyToken = async () => {
+    try {
+      const response = await API.get(
+        `/api/signature-request/token/${token}`
+      );
 
-setRequest(response.data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      console.log("Request Data:", response.data);
 
-    verifyToken();
-  }, [token]);
+      setRequest(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  verifyToken();
+}, [token]);
 
   const handleCaptureSignature = () => {
     if (sigCanvasRef.current?.isEmpty()) {
