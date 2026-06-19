@@ -41,9 +41,9 @@ function PublicSignPage() {
     try {
       console.log("Token:", token);
 
-      const response = await API.get(
-        `/api/signature-request/${token}`
-      );
+     const response = await API.get(
+  `/api/signature-request/token/${token}`
+);
 
       console.log("Request Data:", response.data);
 
