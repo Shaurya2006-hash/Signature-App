@@ -24,17 +24,15 @@ connectDB();
 
 const app = express();
 
-/*
-=========================
-MIDDLEWARE (IMPORTANT ORDER)
-=========================
-*/
-
-// ✅ JSON BODY PARSER (MUST BE FIRST)
+// ─────────────────────────────
+// BODY PARSERS
+// ─────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ CORS CONFIG (FIXED FOR FRONTEND + RENDER)
+// ─────────────────────────────
+// CORS CONFIG
+// ─────────────────────────────
 app.use(
   cors({
     origin: [
@@ -47,64 +45,53 @@ app.use(
   })
 );
 
-/*
-=========================
-STATIC FILES
-=========================
-*/
+// ─────────────────────────────
+// STATIC FILES
+// ─────────────────────────────
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/signed", express.static(path.join(__dirname, "signed")));
 
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"))
-);
-
-app.use(
-  "/signed",
-  express.static(path.join(__dirname, "signed"))
-);
-
-/*
-=========================
-API ROUTES
-=========================
-*/
-
-app.use("/api/pdf", pdfRoutes);
+// ─────────────────────────────
+// API ROUTES
+// ─────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/documents", docRoutes);
 app.use("/api/signatures", signatureRoutes);
 app.use("/api/signature-request", signatureRequestRoutes);
 app.use("/api/audit", auditRoutes);
+app.use("/api/pdf", pdfRoutes);
 
-/*
-=========================
-TEST ROUTE
-=========================
-*/
-
+// ─────────────────────────────
+// TEST ROUTE
+// ─────────────────────────────
 app.get("/test", (req, res) => {
   res.json({
     success: true,
-    message: "Test route works",
+    message: "Server is running correctly 🚀",
   });
 });
 
-/*
-=========================
-ROOT ROUTE
-=========================
-*/
-
+// ─────────────────────────────
+// ROOT ROUTE
+// ─────────────────────────────
 app.get("/", (req, res) => {
-  res.send("API Running");
+  res.send("API Running 🚀");
 });
 
-/*
-=========================
-SERVER START
-=========================
-*/
+// ─────────────────────────────
+// GLOBAL ERROR HANDLER
+// ─────────────────────────────
+app.use((err, req, res, next) => {
+  console.error(err.stack);
 
+  res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
+// ─────────────────────────────
+// START SERVER
+// ─────────────────────────────
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

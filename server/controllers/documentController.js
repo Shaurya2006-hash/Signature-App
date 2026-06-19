@@ -1,7 +1,7 @@
 const Document = require("../models/Document");
 const cloudinary = require("cloudinary").v2;
 
-// Cloudinary config (required but only once)
+// Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -35,6 +35,8 @@ const uploadDocument = async (req, res) => {
       fileName: result.public_id,
       filePath: result.secure_url,
       fileSize: result.bytes,
+
+      // 🔥 USER LINK
       uploadedBy: req.user._id,
     });
 
@@ -43,18 +45,32 @@ const uploadDocument = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Get all documents
 const getDocuments = async (req, res) => {
   try {
-    const docs = await Document.find().sort({ createdAt: -1 });
+    const docs = await Document.find({
+      uploadedBy: req.user._id,
+    }).sort({ createdAt: -1 });
+
     res.json(docs);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+const checkDocumentsExist = async (req, res) => {
+  try {
+    const count = await Document.countDocuments({
+      uploadedBy: req.user._id,
+    });
 
-module.exports = {
+    res.json({
+      exists: count > 0,
+      count,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};module.exports = {
   uploadDocument,
   getDocuments,
+  checkDocumentsExist,
 };

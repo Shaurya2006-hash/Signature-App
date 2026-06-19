@@ -2,37 +2,19 @@ const mongoose = require("mongoose");
 
 const documentSchema = new mongoose.Schema(
   {
-    originalName: {
-      type: String,
-      required: true,
-    },
+    originalName: String,
+    fileName: String,
+    filePath: String,
+    fileSize: Number,
 
-    fileName: {
-      type: String,
-      required: true,
-    },
-
-    filePath: {
-      type: String,
-      required: true,
-    },
-
-    fileSize: {
-      type: Number,
-      required: true,
-    },
-
+    // 🔥 IMPORTANT: USER OWNERSHIP
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-module.exports = mongoose.model(
-  "Document",
-  documentSchema
-);
+module.exports = mongoose.model("Document", documentSchema);

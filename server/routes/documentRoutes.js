@@ -1,9 +1,10 @@
 const express = require("express");
-
 const upload = require("../middleware/uploadMiddleware");
+
 const {
   uploadDocument,
   getDocuments,
+  checkDocumentsExist,
 } = require("../controllers/documentController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -18,7 +19,7 @@ router.post(
   uploadDocument
 );
 
-// Get all uploaded documents
 router.get("/", protect, getDocuments);
 
+router.get("/exists", protect, checkDocumentsExist);
 module.exports = router;
