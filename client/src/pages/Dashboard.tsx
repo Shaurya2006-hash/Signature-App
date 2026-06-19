@@ -201,55 +201,20 @@ function Dashboard() {
 
  const handleGeneratePdf = async () => {
   try {
-    console.log("Generating PDF for:", selectedDocId);
+    const response = await generatePdf(selectedDocId);
 
-    const result = await generatePdf(selectedDocId);
+    const blob = new Blob([response.data], {
+      type: "application/pdf",
+    });
 
-    console.log("PDF API RESULT:", result);
+    const url = window.URL.createObjectURL(blob);
 
-    const pdfUrl = result?.pdfUrl;
-
-    // 🚨 SAFE CHECK (prevents about:blank)
-    if (!pdfUrl) {
-      alert("PDF URL not found. Check backend response.");
-      return;
-    }
-
-    // ✅ OPEN PDF
-    window.open(pdfUrl, "_blank", "noopener,noreferrer");
+    window.open(url, "_blank");
   } catch (error) {
-    console.error("PDF generation error:", error);
+    console.error(error);
     alert("Failed to generate PDF");
   }
 };
-
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      alert("Select a PDF first");
-      return;
-    }
-
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("pdf", selectedFile);
-      const token = localStorage.getItem("token");
-
-    await fetch(`${API_URL.replace(/\/+$/, "")}/api/documents/upload`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      alert("Document Uploaded Successfully");
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      alert("Upload Failed");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleClearCanvas = () => {
     sigCanvasRef.current?.clear();
