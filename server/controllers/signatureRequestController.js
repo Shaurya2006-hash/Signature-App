@@ -104,27 +104,23 @@ const updateSelfSignStatus = async (
 // GET BY TOKEN
 // ====================
 
-const getRequestByToken = async (
-  req,
-  res
-) => {
+const getRequestByToken = async (req, res) => {
   try {
-    const request =
-      await SignatureRequest.findOne({
-        token: req.params.token,
-      }).populate("documentId");
+    const request = await SignatureRequest.findOne({
+      token: req.params.token,
+    }).populate("documentId");
 
     if (!request) {
-      return res
-        .status(404)
-        .json({
-          message: "Invalid Link",
-        });
+      return res.status(404).json({
+        message: "Invalid Link",
+      });
     }
 
-    res.json(request);
+    return res.json({
+      request,
+    });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: error.message,
     });
   }
