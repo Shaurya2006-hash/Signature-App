@@ -1,7 +1,7 @@
 const Signature = require("../models/Signature");
 
 // ===============================
-// SAVE SIGNATURE (NO OVERWRITE)
+// SAVE SIGNATURE (MULTI-SIGNATURE SAFE)
 // ===============================
 const saveSignature = async (req, res) => {
   try {
@@ -20,15 +20,21 @@ const saveSignature = async (req, res) => {
       return res.status(400).json({ message: "fileId is required" });
     }
 
-    // Create NEW signature every time (IMPORTANT FIX)
+    // Validate at least one signature type
+    if (!signerName && !signatureImage) {
+      return res.status(400).json({
+        message: "Either typed or drawn signature is required",
+      });
+    }
+
     const signature = await Signature.create({
       fileId,
       signer,
-      signerName,
-      fontStyle,
-      signatureImage,
-      x,
-      y,
+      signerName: signerName || null,
+      fontStyle: fontStyle || "italic",
+      signatureImage: signatureImage || null,
+      x: Number(x || 100),
+      y: Number(y || 100),
       status: status || "pending",
     });
 
@@ -42,7 +48,7 @@ const saveSignature = async (req, res) => {
 };
 
 // ===============================
-// GET ALL SIGNATURES
+// GET SIGNATURES (OPTIONAL FILTER)
 // ===============================
 const getSignatures = async (req, res) => {
   try {
@@ -50,8 +56,9 @@ const getSignatures = async (req, res) => {
 
     const query = fileId ? { fileId } : {};
 
-    const signatures = await Signature.find(query)
-      .sort({ createdAt: -1 });
+    const signatures = await Signature.find(query).sort({
+      createdAt: -1,
+    });
 
     return res.json(signatures);
   } catch (error) {
