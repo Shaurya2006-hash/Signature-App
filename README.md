@@ -1,5 +1,18 @@
-## Day 14 Task 
+
 # 📄 Digital PDF Signature Platform
+# Live Project Links
+
+## Frontend (User Interface)
+
+https://signature-app-yv04.onrender.com/
+
+## Backend API
+
+https://signature-app-backend-6dmc.onrender.com/
+
+## GitHub Repository
+
+https://github.com/Shaurya2006-hash/Signature-App
 
 ## Project Overview
 
@@ -336,8 +349,8 @@ Reason for Selection:
 * Track statuses
 
 ### Screenshot
+<img width="1917" height="941" alt="image" src="https://github.com/user-attachments/assets/d2f746cc-bfbb-4268-83b6-4468c2baec2e" />
 
-Insert Screenshot Here
 
 ---
 
@@ -348,18 +361,15 @@ Users can upload PDF files.
 Files are stored in Cloudinary.
 
 ### Screenshot
+<img width="1221" height="632" alt="image" src="https://github.com/user-attachments/assets/de78347e-0b24-45a9-9c5d-5b8f105c5319" />
 
-Insert Screenshot Here
 
 ---
 
 ## PDF Preview
 
 Users can preview documents before signing.
-
-### Screenshot
-
-Insert Screenshot Here
+<img width="1917" height="921" alt="image" src="https://github.com/user-attachments/assets/3bd884d5-ad9f-436e-8263-5d5d77896c61" />
 
 ---
 
@@ -374,7 +384,8 @@ Stores:
 
 ### Screenshot
 
-Insert Screenshot Here
+<img width="1905" height="367" alt="image" src="https://github.com/user-attachments/assets/649aa6fa-36db-4758-b238-5fc73dfb6a2e" />
+
 
 ---
 
@@ -387,7 +398,7 @@ Users can:
 
 ### Screenshot
 
-Insert Screenshot Here
+<img width="1157" height="891" alt="image" src="https://github.com/user-attachments/assets/a0f1f43d-7aec-4b3e-a24a-8fabb53d1d1c" />
 
 ---
 
@@ -396,8 +407,8 @@ Insert Screenshot Here
 Users can draw signatures using canvas.
 
 ### Screenshot
+<img width="1041" height="813" alt="image" src="https://github.com/user-attachments/assets/bf18ec65-d876-470b-b353-d2a91e7100e5" />
 
-Insert Screenshot Here
 
 ---
 
@@ -407,7 +418,7 @@ Send signature requests via email.
 
 ### Screenshot
 
-Insert Screenshot Here
+<img width="982" height="426" alt="image" src="https://github.com/user-attachments/assets/aae9b86e-8d33-43ed-b742-76f1d348396b" />
 
 ---
 
@@ -421,7 +432,7 @@ Available statuses:
 
 ### Screenshot
 
-Insert Screenshot Here
+<img width="1912" height="727" alt="image" src="https://github.com/user-attachments/assets/65cc7f32-fded-488d-ba9b-b60498884fb1" />
 
 ---
 
@@ -435,8 +446,8 @@ Tracks:
 * Status
 
 ### Screenshot
+<img width="535" height="576" alt="image" src="https://github.com/user-attachments/assets/0dfb6494-1c0f-4c29-95ae-5bd671c34532" />
 
-Insert Screenshot Here
 
 ---
 
@@ -446,7 +457,8 @@ Generates final signed PDF.
 
 ### Screenshot
 
-Insert Screenshot Here
+<img width="900" height="797" alt="image" src="https://github.com/user-attachments/assets/d428e2c4-1624-4b72-a23f-6cd1f7af9e6f" />
+
 
 ---
 
