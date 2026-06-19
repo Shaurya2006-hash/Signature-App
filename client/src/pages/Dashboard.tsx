@@ -206,15 +206,19 @@ function Dashboard() {
   };
 
   const handleGeneratePdf = async () => {
-    try {
-      const result = await generatePdf(selectedDocId);
-      alert("Signed PDF Generated");
-      window.open(result.downloadUrl, "_blank");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to generate PDF");
-    }
-  };
+  try {
+    console.log("selectedDocId =", selectedDocId);
+
+    const result = await generatePdf(selectedDocId);
+
+    alert("Signed PDF Generated");
+
+    window.open(result.downloadUrl, "_blank");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to generate PDF");
+  }
+};
 
   const handleUpload = async () => {
     if (!selectedFile) {
