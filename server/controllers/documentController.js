@@ -2,9 +2,8 @@ const Document = require("../models/Document");
 
 const uploadDocument = async (req, res) => {
   try {
-    console.log("========== FILE DATA ==========");
-    console.log(req.file);
-    console.log("================================");
+   console.log("FILE OBJECT:");
+console.log(req.file);
 
     const document = await Document.create({
       originalName: req.file.originalname,
