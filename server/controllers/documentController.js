@@ -3,8 +3,9 @@ const Document = require("../models/Document");
 const uploadDocument = async (req, res) => {
   try {
     console.log("========== FILE DATA ==========");
-console.log(req.file);
-console.log("================================");
+    console.log(req.file);
+    console.log("================================");
+
     const document = await Document.create({
       originalName: req.file.originalname,
 
@@ -21,18 +22,18 @@ console.log("================================");
 
     res.status(201).json(document);
   } catch (error) {
+    console.log("ERROR:");
+    console.log(error);
 
-  console.log("ERROR:");
-  console.log(error);
+    if (error.errors) {
+      console.log(error.errors);
+    }
 
-  if (error.errors) {
-    console.log(error.errors);
+    res.status(500).json({
+      message: error.message,
+    });
   }
-
-  res.status(500).json({
-    message: error.message,
-  });
-}
+};
 
 const getDocuments = async (req, res) => {
   try {
@@ -47,7 +48,7 @@ const getDocuments = async (req, res) => {
     });
   }
 };
-}
+
 module.exports = {
   uploadDocument,
   getDocuments,
