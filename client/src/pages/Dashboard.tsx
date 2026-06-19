@@ -66,12 +66,6 @@ function getPreviewStyle(font: string): React.CSSProperties {
   const found = FONT_OPTIONS.find((f) => f.value === font);
   return found ? found.style : {};
 }
-
-// ─── Helper: safely join base URL + path (no double slashes) ────────────────
-function buildUrl(base: string, path: string): string {
-  return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
-}
-
 function Dashboard() {
   const [documents, setDocuments] = useState<DocumentType[]>([]);
 
