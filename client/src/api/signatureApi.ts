@@ -21,9 +21,9 @@ export const generatePdf = async (documentId: string) => {
     `/api/pdf/generate/${documentId}`,
     {},
     {
-      responseType: "blob", // ⭐ IMPORTANT
+      responseType: "blob",
     }
   );
 
-  return response.data; // this is now PDF blob
+  return response.data;
 };
