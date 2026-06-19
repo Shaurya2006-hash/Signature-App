@@ -1,7 +1,7 @@
 const Signature = require("../models/Signature");
 
 // ===============================
-// SAVE SIGNATURE (MULTI-SIGNATURE SAFE)
+// SAVE SIGNATURE
 // ===============================
 const saveSignature = async (req, res) => {
   try {
@@ -20,7 +20,6 @@ const saveSignature = async (req, res) => {
       return res.status(400).json({ message: "fileId is required" });
     }
 
-    // Validate at least one signature type
     if (!signerName && !signatureImage) {
       return res.status(400).json({
         message: "Either typed or drawn signature is required",
@@ -41,14 +40,12 @@ const saveSignature = async (req, res) => {
     return res.status(201).json(signature);
   } catch (error) {
     console.error("saveSignature error:", error);
-    return res.status(500).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };
 
 // ===============================
-// GET SIGNATURES (OPTIONAL FILTER)
+// GET SIGNATURES
 // ===============================
 const getSignatures = async (req, res) => {
   try {
@@ -62,10 +59,7 @@ const getSignatures = async (req, res) => {
 
     return res.json(signatures);
   } catch (error) {
-    console.error("getSignatures error:", error);
-    return res.status(500).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };
 
