@@ -1,19 +1,14 @@
-const express =
-  require("express");
+const express = require("express");
 
-const router =
-  express.Router();
+const router = express.Router();
 
 const {
   getAuditLogs,
-} = require(
-  "../controllers/auditController"
-);
+} = require("../controllers/auditController");
 
 router.get(
   "/:fileId",
   getAuditLogs
 );
 
-module.exports =
-  router;
+module.exports = router;

@@ -10,6 +10,8 @@ const getAuditLogs =
       const logs =
         await Audit.find({
           fileId,
+        }).sort({
+          createdAt: -1,
         });
 
       res.json(logs);
