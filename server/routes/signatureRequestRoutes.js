@@ -12,7 +12,9 @@ const {
   rejectDocument,
 } = require("../controllers/signatureRequestController");
 
+// ─────────────────────────────
 // TEST ROUTE
+// ─────────────────────────────
 router.get("/test", (req, res) => {
   res.json({
     success: true,
@@ -20,18 +22,60 @@ router.get("/test", (req, res) => {
   });
 });
 
-// AUTH ROUTES
-router.post("/create", protect, createSignatureRequest);
+// ─────────────────────────────
+// TEMPORARY TOKEN TEST ROUTE
+// Use this to verify that the public
+// signature-request routes are not
+// being blocked by authentication.
+// ─────────────────────────────
+router.get("/token-test/:token", (req, res) => {
+  console.log("TOKEN TEST ROUTE HIT:", req.params.token);
 
-router.get("/", protect, getSignatureRequests);
+  res.json({
+    success: true,
+    message: "Token route is public and working",
+    token: req.params.token,
+  });
+});
 
-router.put("/self-sign/:id", protect, updateSelfSignStatus);
+// ─────────────────────────────
+// AUTHENTICATED ROUTES
+// ─────────────────────────────
+router.post(
+  "/create",
+  protect,
+  createSignatureRequest
+);
 
-// PUBLIC EMAIL ROUTES
-router.get("/token/:token", getRequestByToken);
+router.get(
+  "/",
+  protect,
+  getSignatureRequests
+);
 
-router.put("/sign/:token", signDocument);
+router.put(
+  "/self-sign/:id",
+  protect,
+  updateSelfSignStatus
+);
 
-router.put("/reject/:token", rejectDocument);
+// ─────────────────────────────
+// PUBLIC EMAIL SIGNATURE ROUTES
+// IMPORTANT: DO NOT ADD protect
+// ─────────────────────────────
+router.get(
+  "/token/:token",
+  getRequestByToken
+);
+
+router.put(
+  "/sign/:token",
+  signDocument
+);
+
+router.put(
+  "/reject/:token",
+  rejectDocument
+);
 
 module.exports = router;
