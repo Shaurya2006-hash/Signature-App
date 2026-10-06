@@ -164,35 +164,59 @@ function Dashboard() {
     setSignatureSaved(true);
   };
 
-  const handleSaveSignature = async () => {
-    try {
-      const payload: any = {
-        fileId: selectedDocId,
-        signer: "Shaurya",
-        signerName,
-        fontStyle,
-        x: dragX,
-        y: dragY,
-        status: "pending",
-      };
-
-      if (signatureMode === "draw" && signatureImage) {
-        payload.signatureImage = signatureImage;
-      }
-
-      await saveSignature(payload);
-
-      await API.put(`/api/signature-request/self-sign/${selectedDocId}`);
-
-      const updatedSignatures = await getSignatures();
-      setSignatures(updatedSignatures);
-
-      alert("Signature saved successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save signature");
+ const handleSaveSignature = async () => {
+  try {
+    if (!selectedDocId) {
+      alert("Please select a document first");
+      return;
     }
-  };
+
+    if (signatureMode === "type" && !signerName.trim()) {
+      alert("Please enter your name");
+      return;
+    }
+
+    if (signatureMode === "draw" && !signatureImage) {
+      alert("Please capture your signature first");
+      return;
+    }
+
+    const payload: any = {
+      fileId: selectedDocId,
+      signer: "Shaurya",
+      signerName:
+        signatureMode === "type" ? signerName.trim() : "",
+      fontStyle:
+        signatureMode === "type" ? fontStyle : "",
+      signatureImage:
+        signatureMode === "draw" ? signatureImage : null,
+      x: Number(dragX),
+      y: Number(dragY),
+      status: "pending",
+    };
+
+    console.log("Saving signature:", payload);
+
+    // Save signature to MongoDB
+    const savedSignature = await saveSignature(payload);
+
+    console.log("Signature saved:", savedSignature);
+
+    // Refresh signature list
+    const updatedSignatures = await getSignatures();
+    setSignatures(updatedSignatures);
+
+    alert("Signature saved successfully!");
+  } catch (error: any) {
+    console.error("SAVE SIGNATURE ERROR:", error);
+    console.error("SERVER RESPONSE:", error?.response?.data);
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to save signature"
+    );
+  }
+};
 
 const handleGeneratePdf = async () => {
   try {
