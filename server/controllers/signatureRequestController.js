@@ -1,546 +1,603 @@
-const SignatureRequest =
-  require("../models/SignatureRequest");
+const SignatureRequest = require("../models/SignatureRequest");
+const Document = require("../models/Document");
+const Signature = require("../models/Signature");
+const Audit = require("../models/Audit");
 
-const Document =
-  require("../models/Document");
-
-const Audit =
-  require("../models/Audit");
-
-const Signature =
-  require("../models/Signature");
-
-const {
-  sendEmail,
-  sendEmailWithAttachment,
-} = require("../utils/sendEmail");
+const sendEmail = require("../utils/sendEmail");
 
 const {
   generateSignedPdfForRequest,
 } = require("../services/pdfService");
 
-const { v4: uuidv4 } =
-  require("uuid");
+const { v4: uuidv4 } = require("uuid");
 
-// =====================================================
-// CREATE REQUEST
-// =====================================================
+// ======================================================
+// CREATE SIGNATURE REQUEST
+// ======================================================
 
-const createSignatureRequest =
-  async (req, res) => {
-    try {
-      const {
+const createSignatureRequest = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      email,
+      documentId,
+    } = req.body;
+
+    if (!email || !documentId) {
+      return res.status(400).json({
+        message:
+          "Email and documentId are required",
+      });
+    }
+
+    const document =
+      await Document.findById(documentId);
+
+    if (!document) {
+      return res.status(404).json({
+        message: "Document not found",
+      });
+    }
+
+    const token = uuidv4();
+
+    const request =
+      await SignatureRequest.create({
         email,
         documentId,
-      } = req.body;
+        token,
+      });
 
-      if (!email || !documentId) {
-        return res.status(400).json({
-          message:
-            "Email and documentId are required",
-        });
-      }
+    const signingLink =
+      `${process.env.FRONTEND_URL}/sign/${token}`;
 
-      const document =
-        await Document.findById(
-          documentId
-        );
-
-      if (!document) {
-        return res.status(404).json({
-          message:
-            "Document not found",
-        });
-      }
-
-      const token = uuidv4();
-
-      const request =
-        await SignatureRequest.create({
-          email,
-          documentId,
-          token,
-        });
-
-      const signingLink =
-        `${process.env.FRONTEND_URL}/sign/${token}`;
-
-      await sendEmail(
-        email,
-        "Signature Request",
-        `
+    await sendEmail(
+      email,
+      "Signature Request",
+      `
         <h2>Document Signature Request</h2>
 
-        <p>Please review and sign the document.</p>
+        <p>
+          You have been requested to sign a document.
+        </p>
 
         <p>
           <a href="${signingLink}">
-            Open Document
+            Open Document and Sign
           </a>
         </p>
-        `
+      `
+    );
+
+    res.status(201).json(request);
+
+  } catch (error) {
+    console.error(
+      "CREATE SIGNATURE REQUEST ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// GET ALL REQUESTS
+// ======================================================
+
+const getSignatureRequests = async (
+  req,
+  res
+) => {
+  try {
+    const requests =
+      await SignatureRequest.find()
+        .sort({
+          createdAt: -1,
+        });
+
+    res.json(requests);
+
+  } catch (error) {
+    console.error(
+      "GET SIGNATURE REQUESTS ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// SELF SIGN
+// ======================================================
+
+const updateSelfSignStatus = async (
+  req,
+  res
+) => {
+  try {
+    const request =
+      await SignatureRequest.findByIdAndUpdate(
+        req.params.id,
+        {
+          status: "signed",
+          signedAt: new Date(),
+        },
+        {
+          new: true,
+        }
       );
 
-      res.status(201).json(
+    if (!request) {
+      return res.status(404).json({
+        message:
+          "Signature request not found",
+      });
+    }
+
+    res.json(request);
+
+  } catch (error) {
+    console.error(
+      "SELF SIGN ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// GET REQUEST BY TOKEN
+// ======================================================
+
+const getRequestByToken = async (
+  req,
+  res
+) => {
+  try {
+    const request =
+      await SignatureRequest.findOne({
+        token: req.params.token,
+      }).populate("documentId");
+
+    if (!request) {
+      return res.status(404).json({
+        message: "Invalid Link",
+      });
+    }
+
+    res.json(request);
+
+  } catch (error) {
+    console.error(
+      "GET REQUEST BY TOKEN ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// SIGN DOCUMENT
+// ======================================================
+
+const signDocument = async (
+  req,
+  res
+) => {
+  try {
+
+    // ----------------------------------------------
+    // 1. FIND SIGNATURE REQUEST
+    // ----------------------------------------------
+
+    const request =
+      await SignatureRequest.findOne({
+        token: req.params.token,
+      });
+
+    if (!request) {
+      return res.status(404).json({
+        message: "Invalid Request",
+      });
+    }
+
+    // ----------------------------------------------
+    // 2. PREVENT SIGNING TWICE
+    // ----------------------------------------------
+
+    if (request.status === "signed") {
+      return res.status(400).json({
+        message:
+          "This document has already been signed",
+      });
+    }
+
+    if (request.status === "rejected") {
+      return res.status(400).json({
+        message:
+          "This document has already been rejected",
+      });
+    }
+
+    // ----------------------------------------------
+    // 3. GET SIGNATURE DATA FROM FRONTEND
+    // ----------------------------------------------
+
+    const {
+      signerName,
+      fontStyle,
+      signatureType,
+      signatureImage,
+    } = req.body;
+
+    // ----------------------------------------------
+    // 4. VALIDATE SIGNATURE
+    // ----------------------------------------------
+
+    if (
+      signatureType !== "type" &&
+      signatureType !== "draw"
+    ) {
+      return res.status(400).json({
+        message:
+          "Invalid signature type",
+      });
+    }
+
+    if (
+      signatureType === "type" &&
+      !signerName?.trim()
+    ) {
+      return res.status(400).json({
+        message:
+          "Signer name is required",
+      });
+    }
+
+    if (
+      signatureType === "draw" &&
+      !signatureImage
+    ) {
+      return res.status(400).json({
+        message:
+          "Signature image is required",
+      });
+    }
+
+    // ----------------------------------------------
+    // 5. GET DOCUMENT
+    // ----------------------------------------------
+
+    const document =
+      await Document.findById(
+        request.documentId
+      );
+
+    if (!document) {
+      return res.status(404).json({
+        message: "Document not found",
+      });
+    }
+
+    // ----------------------------------------------
+    // 6. SAVE SIGNER INFORMATION IN REQUEST
+    // ----------------------------------------------
+
+    request.signerName =
+      signerName?.trim() || "";
+
+    request.fontStyle =
+      fontStyle || "italic";
+
+    request.signatureType =
+      signatureType;
+
+    request.signatureImage =
+      signatureType === "draw"
+        ? signatureImage
+        : "";
+
+    // ----------------------------------------------
+    // 7. GENERATE SIGNED PDF
+    // ----------------------------------------------
+
+    console.log(
+      "Generating signed PDF..."
+    );
+
+    const signedPdf =
+      await generateSignedPdfForRequest(
+        request.documentId,
         request
       );
-    } catch (error) {
-      console.error(
-        "CREATE REQUEST ERROR:",
-        error
-      );
 
-      res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
+    console.log(
+      "Signed PDF generated:",
+      signedPdf.fileName
+    );
 
-// =====================================================
-// GET ALL REQUESTS
-// =====================================================
+    // ----------------------------------------------
+    // 8. UPDATE REQUEST STATUS
+    // ----------------------------------------------
 
-const getSignatureRequests =
-  async (req, res) => {
-    try {
-      const requests =
-        await SignatureRequest.find()
-          .sort({
-            createdAt: -1,
-          });
+    request.status = "signed";
 
-      res.json(requests);
-    } catch (error) {
-      res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
+    request.signedAt =
+      new Date();
 
-// =====================================================
-// SELF SIGN STATUS
-// =====================================================
+    request.signedPdfUrl =
+      signedPdf.downloadUrl;
 
-const updateSelfSignStatus =
-  async (req, res) => {
-    try {
-      const request =
-        await SignatureRequest.findById(
-          req.params.id
-        );
+    await request.save();
 
-      if (!request) {
-        return res.status(404).json({
-          message:
-            "Signature request not found",
-        });
-      }
+    console.log(
+      "Signature request status:",
+      request.status
+    );
 
-      request.status =
-        "signed";
+    // ----------------------------------------------
+    // 9. SAVE SIGNATURE RECORD
+    // ----------------------------------------------
 
-      request.signedAt =
-        new Date();
+    await Signature.create({
+      fileId: request.documentId,
 
-      await request.save();
+      // Actual person who signed
+      signer: request.email,
 
-      res.json(request);
-    } catch (error) {
-      res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
+      signerName:
+        request.signerName || "",
 
-// =====================================================
-// GET REQUEST BY TOKEN
-// =====================================================
+      fontStyle:
+        request.fontStyle || "italic",
 
-const getRequestByToken =
-  async (req, res) => {
-    try {
-      const request =
-        await SignatureRequest
-          .findOne({
-            token:
-              req.params.token,
-          })
-          .populate(
-            "documentId"
-          );
+      signatureImage:
+        request.signatureImage || null,
 
-      if (!request) {
-        return res.status(404).json({
-          message:
-            "Invalid Link",
-        });
-      }
+      // Same default position used by pdfService
+      x: 200,
+      y: 300,
 
-      res.json(request);
-    } catch (error) {
-      res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
+      status: "signed",
+    });
 
-// =====================================================
-// SIGN DOCUMENT
-// =====================================================
+    console.log(
+      "Signature record saved"
+    );
 
-const signDocument =
-  async (req, res) => {
-    try {
-      const {
-        signerName,
-        fontStyle,
-        signatureType,
-        signatureImage,
-      } = req.body;
+    // ----------------------------------------------
+    // 10. GET SIGNER IP ADDRESS
+    // ----------------------------------------------
 
-      // -----------------------------------------------
-      // 1. Find request
-      // -----------------------------------------------
+    const forwardedFor =
+      req.headers["x-forwarded-for"];
 
-      const request =
-        await SignatureRequest.findOne({
-          token:
-            req.params.token,
-        });
+    const ipAddress =
+      forwardedFor
+        ? forwardedFor
+            .split(",")[0]
+            .trim()
+        : req.ip ||
+          req.socket?.remoteAddress ||
+          "";
 
-      if (!request) {
-        return res.status(404).json({
-          message:
-            "Invalid Request",
-        });
-      }
+    // ----------------------------------------------
+    // 11. CREATE AUDIT LOG
+    // ----------------------------------------------
 
-      // -----------------------------------------------
-      // 2. Prevent signing twice
-      // -----------------------------------------------
+    await Audit.create({
+      fileId: request.documentId,
 
-      if (
-        request.status ===
-        "signed"
-      ) {
-        return res.status(400).json({
-          message:
-            "Document is already signed",
-        });
-      }
+      // IMPORTANT:
+      // This is the actual signer
+      email: request.email,
 
-      if (
-        request.status ===
-        "rejected"
-      ) {
-        return res.status(400).json({
-          message:
-            "Document has already been rejected",
-        });
-      }
+      action: "SIGNED",
 
-      // -----------------------------------------------
-      // 3. Validate signature
-      // -----------------------------------------------
+      ipAddress,
 
-      if (
-        signatureType !==
-          "type" &&
-        signatureType !==
-          "draw"
-      ) {
-        return res.status(400).json({
-          message:
-            "Invalid signature type",
-        });
-      }
+      reason: "",
+    });
 
-      if (
-        signatureType === "type" &&
-        !signerName?.trim()
-      ) {
-        return res.status(400).json({
-          message:
-            "Signer name is required",
-        });
-      }
+    console.log(
+      "Audit log created"
+    );
 
-      if (
-        signatureType === "draw" &&
-        !signatureImage
-      ) {
-        return res.status(400).json({
-          message:
-            "Signature image is required",
-        });
-      }
+    // ----------------------------------------------
+    // 12. EMAIL SIGNED PDF TO SIGNER
+    // ----------------------------------------------
 
-      // -----------------------------------------------
-      // 4. Verify document
-      // -----------------------------------------------
+    await sendEmail(
+      request.email,
 
-      const document =
-        await Document.findById(
-          request.documentId
-        );
+      "Your Document Has Been Signed",
 
-      if (!document) {
-        return res.status(404).json({
-          message:
-            "Document not found",
-        });
-      }
-
-      // -----------------------------------------------
-      // 5. Save signature information
-      // -----------------------------------------------
-
-      await Signature.create({
-        fileId:
-          request.documentId,
-
-        signer:
-          request.email,
-
-        signerName:
-          signerName || "",
-
-        fontStyle:
-          fontStyle || "italic",
-
-        signatureImage:
-          signatureType === "draw"
-            ? signatureImage
-            : null,
-
-        x: 200,
-
-        y: 300,
-
-        status:
-          "signed",
-      });
-
-      // -----------------------------------------------
-      // 6. Generate signed PDF
-      // -----------------------------------------------
-
-      const signedPdf =
-        await generateSignedPdfForRequest(
-          request.documentId,
-          {
-            signerName:
-              signerName || "",
-            fontStyle:
-              fontStyle || "italic",
-            signatureType,
-            signatureImage:
-              signatureImage || "",
-          }
-        );
-
-      // -----------------------------------------------
-      // 7. Update request
-      // -----------------------------------------------
-
-      request.signerName =
-        signerName || "";
-
-      request.signatureType =
-        signatureType;
-
-      request.signatureImage =
-        signatureType === "draw"
-          ? signatureImage
-          : "";
-
-      request.signedPdfUrl =
-        signedPdf.downloadUrl;
-
-      request.status =
-        "signed";
-
-      request.signedAt =
-        new Date();
-
-      await request.save();
-
-      // -----------------------------------------------
-      // 8. Create audit log
-      // -----------------------------------------------
-
-      const ipAddress =
-        req.headers[
-          "x-forwarded-for"
-        ]?.split(",")[0] ||
-        req.socket.remoteAddress ||
-        "";
-
-      await Audit.create({
-        fileId:
-          request.documentId,
-
-        email:
-          request.email,
-
-        action:
-          "signed",
-
-        ipAddress,
-
-        reason: "",
-      });
-
-      // -----------------------------------------------
-      // 9. Email signed PDF to signer
-      // -----------------------------------------------
-
-      await sendEmailWithAttachment(
-        request.email,
-
-        "Document Signed Successfully",
-
-        `
+      `
         <h2>Document Signed Successfully</h2>
 
         <p>
-          Hello ${signerName || "Signer"},
+          Hello ${request.signerName || "Signer"},
         </p>
 
         <p>
-          Your signed document is attached
-          to this email.
+          Your signature has been successfully
+          added to the document.
         </p>
 
         <p>
-          You can also access the signed
-          document here:
-        </p>
-
-        <p>
-          <a href="${signedPdf.downloadUrl}">
-            View Signed PDF
-          </a>
+          The signed PDF is attached to this email.
         </p>
 
         <p>
           Thank you.
         </p>
-        `,
+      `,
 
-        signedPdf.pdfBuffer,
+      [
+        {
+          filename:
+            signedPdf.fileName,
 
-        "signed-document.pdf"
-      );
+          content:
+            signedPdf.pdfBytes,
+        },
+      ]
+    );
 
-      // -----------------------------------------------
-      // 10. Success
-      // -----------------------------------------------
+    console.log(
+      "Signed PDF emailed to:",
+      request.email
+    );
 
-      return res.json({
-        success: true,
+    // ----------------------------------------------
+    // 13. OPTIONAL OWNER NOTIFICATION
+    // ----------------------------------------------
 
-        message:
-          "Document signed successfully",
-
-        signedPdfUrl:
-          signedPdf.downloadUrl,
-
-        status:
-          request.status,
-      });
-
-    } catch (error) {
-      console.error(
-        "SIGN DOCUMENT ERROR:",
-        error
-      );
-
-      return res.status(500).json({
-        message:
-          error.message ||
-          "Failed to sign document",
-      });
-    }
-  };
-
-// =====================================================
-// REJECT DOCUMENT
-// =====================================================
-
-const rejectDocument =
-  async (req, res) => {
-    try {
-      const request =
-        await SignatureRequest.findOne({
-          token:
-            req.params.token,
-        });
-
-      if (!request) {
-        return res.status(404).json({
-          message:
-            "Invalid Request",
-        });
-      }
-
-      if (
-        request.status ===
-        "signed"
-      ) {
-        return res.status(400).json({
-          message:
-            "Document has already been signed",
-        });
-      }
-
-      request.status =
-        "rejected";
-
-      request.reason =
-        req.body.reason || "";
-
-      await request.save();
-
-      // -----------------------------------------------
-      // Audit rejection
-      // -----------------------------------------------
-
-      const ipAddress =
-        req.headers[
-          "x-forwarded-for"
-        ]?.split(",")[0] ||
-        req.socket.remoteAddress ||
-        "";
-
-      await Audit.create({
-        fileId:
-          request.documentId,
-
-        email:
-          request.email,
-
-        action:
-          "rejected",
-
-        ipAddress,
-
-        reason:
-          request.reason,
-      });
-
-      // -----------------------------------------------
-      // Email owner
-      // -----------------------------------------------
-
+    if (
+      process.env.OWNER_EMAIL &&
+      process.env.OWNER_EMAIL !== request.email
+    ) {
       await sendEmail(
         process.env.OWNER_EMAIL,
-        "Document Rejected",
+
+        "Document Signed",
+
         `
+          <h2>Document Signed</h2>
+
+          <p>
+            ${request.email}
+            signed the document.
+          </p>
+
+          <p>
+            Signer name:
+            ${request.signerName || "Not provided"}
+          </p>
+        `
+      );
+    }
+
+    // ----------------------------------------------
+    // 14. SUCCESS RESPONSE
+    // ----------------------------------------------
+
+    return res.json({
+      success: true,
+
+      message:
+        "Document signed successfully",
+
+      status:
+        request.status,
+
+      signedAt:
+        request.signedAt,
+
+      signedPdfUrl:
+        request.signedPdfUrl,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "SIGN DOCUMENT ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        error.message ||
+        "Failed to sign document",
+    });
+  }
+};
+
+// ======================================================
+// REJECT DOCUMENT
+// ======================================================
+
+const rejectDocument = async (
+  req,
+  res
+) => {
+  try {
+
+    const request =
+      await SignatureRequest.findOne({
+        token: req.params.token,
+      });
+
+    if (!request) {
+      return res.status(404).json({
+        message: "Invalid Request",
+      });
+    }
+
+    if (request.status === "signed") {
+      return res.status(400).json({
+        message:
+          "Signed document cannot be rejected",
+      });
+    }
+
+    request.status = "rejected";
+
+    request.reason =
+      req.body.reason || "";
+
+    await request.save();
+
+    // ----------------------------------------------
+    // AUDIT LOG FOR REJECTION
+    // ----------------------------------------------
+
+    const forwardedFor =
+      req.headers["x-forwarded-for"];
+
+    const ipAddress =
+      forwardedFor
+        ? forwardedFor
+            .split(",")[0]
+            .trim()
+        : req.ip ||
+          req.socket?.remoteAddress ||
+          "";
+
+    await Audit.create({
+      fileId: request.documentId,
+
+      email: request.email,
+
+      action: "REJECTED",
+
+      ipAddress,
+
+      reason: request.reason,
+    });
+
+    // ----------------------------------------------
+    // OWNER EMAIL
+    // ----------------------------------------------
+
+    await sendEmail(
+      process.env.OWNER_EMAIL,
+      "Document Rejected",
+      `
         <h2>Document Rejected</h2>
 
         <p>
@@ -549,28 +606,34 @@ const rejectDocument =
         </p>
 
         <p>
-          <strong>Reason:</strong>
+          Reason:
           ${request.reason}
         </p>
-        `
-      );
+      `
+    );
 
-      res.json({
-        success: true,
-      });
+    res.json({
+      success: true,
+      message:
+        "Document rejected successfully",
+    });
 
-    } catch (error) {
-      console.error(
-        "REJECT DOCUMENT ERROR:",
-        error
-      );
+  } catch (error) {
 
-      res.status(500).json({
-        message:
-          error.message,
-      });
-    }
-  };
+    console.error(
+      "REJECT DOCUMENT ERROR:",
+      error
+    );
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// ======================================================
+// EXPORTS
+// ======================================================
 
 module.exports = {
   createSignatureRequest,

@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+
 const {
   PDFDocument,
   rgb,
@@ -17,80 +18,54 @@ const generateSignedPdfForRequest = async (
   // 1. GET ORIGINAL DOCUMENT
   // ==========================================
 
-  const document =
-    await Document.findById(documentId);
+  const document = await Document.findById(documentId);
 
   if (!document) {
-    throw new Error(
-      "Document not found"
-    );
+    throw new Error("Document not found");
   }
 
   if (!document.filePath) {
-    throw new Error(
-      "Document file path not found"
-    );
+    throw new Error("Document file path not found");
   }
 
   // ==========================================
   // 2. DOWNLOAD ORIGINAL PDF
   // ==========================================
 
-  const pdfResponse =
-    await axios.get(
-      document.filePath,
-      {
-        responseType:
-          "arraybuffer",
-      }
-    );
+  const pdfResponse = await axios.get(
+    document.filePath,
+    {
+      responseType: "arraybuffer",
+    }
+  );
 
   // ==========================================
   // 3. LOAD PDF
   // ==========================================
 
-  const pdfDoc =
-    await PDFDocument.load(
-      pdfResponse.data
-    );
+  const pdfDoc = await PDFDocument.load(
+    pdfResponse.data
+  );
 
-  const pages =
-    pdfDoc.getPages();
+  const pages = pdfDoc.getPages();
 
   if (!pages.length) {
-    throw new Error(
-      "PDF has no pages"
-    );
+    throw new Error("PDF has no pages");
   }
 
-  const firstPage =
-    pages[0];
+  const firstPage = pages[0];
 
-  const pdfWidth =
-    firstPage.getWidth();
-
-  const pdfHeight =
-    firstPage.getHeight();
+  const pdfWidth = firstPage.getWidth();
+  const pdfHeight = firstPage.getHeight();
 
   // ==========================================
-  // 4. POSITION
+  // 4. SIGNATURE POSITION
   // ==========================================
-  //
-  // The public signing page currently doesn't
-  // provide a saved position in SignatureRequest.
-  //
-  // Use a safe default position for now.
-  //
-  // Later, when we connect the signature
-  // placeholder position to SignatureRequest,
-  // this can be replaced with the real x/y.
-  //
 
   const frontendWidth = 1000;
 
   const scale =
-    pdfWidth /
-    frontendWidth;
+    pdfWidth / frontendWidth;
 
   const frontendX = 200;
   const frontendY = 300;
@@ -113,18 +88,14 @@ const generateSignedPdfForRequest = async (
   // 5. DRAW SIGNATURE IMAGE
   // ==========================================
 
-  if (
-    signatureRequest.signatureImage
-  ) {
+  if (signatureRequest.signatureImage) {
     const signatureImage =
       signatureRequest.signatureImage;
 
     let imageBytes;
 
     if (
-      signatureImage.startsWith(
-        "data:image"
-      )
+      signatureImage.startsWith("data:image")
     ) {
       const parts =
         signatureImage.split(",");
@@ -135,11 +106,10 @@ const generateSignedPdfForRequest = async (
         );
       }
 
-      imageBytes =
-        Buffer.from(
-          parts[1],
-          "base64"
-        );
+      imageBytes = Buffer.from(
+        parts[1],
+        "base64"
+      );
     } else {
       const imageResponse =
         await axios.get(
@@ -150,10 +120,9 @@ const generateSignedPdfForRequest = async (
           }
         );
 
-      imageBytes =
-        Buffer.from(
-          imageResponse.data
-        );
+      imageBytes = Buffer.from(
+        imageResponse.data
+      );
     }
 
     const pngImage =
@@ -166,10 +135,8 @@ const generateSignedPdfForRequest = async (
       {
         x: pdfX,
         y: pdfY,
-        width:
-          signatureWidth,
-        height:
-          signatureHeight,
+        width: signatureWidth,
+        height: signatureHeight,
       }
     );
   }
@@ -218,17 +185,15 @@ const generateSignedPdfForRequest = async (
       signatureRequest.signerName,
       {
         x: pdfX,
-        y:
-          pdfY +
-          15 * scale,
-        size:
-          18 * scale,
+        y: pdfY + 15 * scale,
+        size: 18 * scale,
         font,
-        color:
-          rgb(0, 0, 0),
+        color: rgb(0, 0, 0),
       }
     );
-  } else {
+  }
+
+  else {
     throw new Error(
       "No signature information found"
     );
@@ -252,11 +217,7 @@ const generateSignedPdfForRequest = async (
       "signed"
     );
 
-  if (
-    !fs.existsSync(
-      signedFolder
-    )
-  ) {
+  if (!fs.existsSync(signedFolder)) {
     fs.mkdirSync(
       signedFolder,
       {
@@ -284,12 +245,18 @@ const generateSignedPdfForRequest = async (
   );
 
   // ==========================================
-  // 10. RETURN FILE INFORMATION
+  // 10. RETURN INFORMATION
   // ==========================================
 
   return {
     fileName,
+
     outputPath,
+
+    pdfBytes: Buffer.from(
+      signedPdfBytes
+    ),
+
     downloadUrl:
       `${process.env.BACKEND_URL || "http://localhost:5000"}/signed/${fileName}`,
   };
